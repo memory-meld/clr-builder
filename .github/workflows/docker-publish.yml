@@ -33,6 +33,11 @@ jobs:
       id-token: write
 
     steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          remove-android: 'true'
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
