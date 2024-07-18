@@ -37,9 +37,26 @@ jobs:
         uses: easimon/maximize-build-space@master
         with:
           remove-android: 'true'
+          remove-docker-images: 'true'
 
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Make docker use freed space
+        run: |
+          # cat /usr/lib/systemd/system/docker.service
+          sudo systemctl stop docker
+          sudo mv /var/lib/docker . || mkdir -p docker
+          sudo mkdir -p /etc/systemd/system/docker.service.d/
+          sudo tee /etc/systemd/system/docker.service.d/docker.root.conf <<-EOF
+            [Service]
+            ExecStart=
+            ExecStart=/usr/bin/dockerd --data-root ${{ github.workspace }}/docker -H fd:// --containerd=/run/containerd/containerd.sock
+          EOF
+          sudo systemctl daemon-reload
+          sudo systemctl restart docker
+          sudo systemctl --no-pager --full status docker
+          docker info
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
